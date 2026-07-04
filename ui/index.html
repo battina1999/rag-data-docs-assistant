@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Data Documentation Assistant</title>
+<style>
+  :root{--navy:#1f3b5c;--teal:#2a9d8f;--amber:#e9a23b;--bg:#f5f7fa;--card:#fff;--line:#e2e8f0;--muted:#64748b}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:#0f172a}
+  header{background:var(--navy);color:#fff;padding:22px 26px}
+  header h1{margin:0;font-size:20px}
+  header p{margin:4px 0 0;font-size:13px;opacity:.85}
+  .provider{float:right;font-size:12px;background:rgba(255,255,255,.15);padding:4px 10px;border-radius:20px}
+  .wrap{max-width:880px;margin:24px auto;padding:0 18px}
+  .ask{display:flex;gap:10px}
+  .ask input{flex:1;padding:13px 15px;border:1px solid var(--line);border-radius:10px;font-size:15px}
+  .ask button{padding:0 22px;background:var(--teal);color:#fff;border:0;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer}
+  .ask button:disabled{opacity:.6;cursor:default}
+  .chips{margin:12px 0 4px;display:flex;flex-wrap:wrap;gap:8px}
+  .chip{font-size:12.5px;background:#fff;border:1px solid var(--line);color:var(--navy);padding:6px 11px;border-radius:20px;cursor:pointer}
+  .chip:hover{border-color:var(--teal)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-top:18px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  .badge{display:inline-block;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:20px}
+  .grounded{background:#dcfce7;color:#15803d}
+  .ungrounded{background:#fef3c7;color:#b45309}
+  .answer{margin:12px 0 6px;font-size:15.5px;line-height:1.6;white-space:pre-wrap}
+  .cites{margin-top:14px;border-top:1px dashed var(--line);padding-top:12px}
+  .cites h4{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+  .cite{font-size:13px;padding:8px 10px;background:#f8fafc;border:1px solid var(--line);border-radius:8px;margin-bottom:7px}
+  .cite .src{font-weight:600;color:var(--navy)}
+  .cite .score{float:right;color:var(--teal);font-weight:600}
+  .cite .snip{color:var(--muted);margin-top:3px;font-size:12px}
+  .hint{color:var(--muted);font-size:12.5px;margin-top:10px}
+  .spinner{display:inline-block;width:15px;height:15px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header>
+  <span class="provider" id="provider">…</span>
+  <h1>🔎 Data Documentation Assistant</h1>
+  <p>Ask about pipelines, schemas, data dictionaries and business rules — answers are grounded in the docs, with citations.</p>
+</header>
+
+<div class="wrap">
+  <div class="ask">
+    <input id="q" placeholder="e.g. What is the grain of the fact_flights table?" autocomplete="off"/>
+    <button id="go">Ask</button>
+  </div>
+  <div class="chips" id="chips"></div>
+  <div id="out"></div>
+  <p class="hint" id="hint"></p>
+</div>
+
+<script>
+const EXAMPLES = [
+  "What is the grain of the fact_flights table?",
+  "How is on-time percentage defined?",
+  "What are the delay cause categories?",
+  "What is GMV for ShopSphere?",
+  "What is the data freshness SLA?"
+];
+const out = document.getElementById('out');
+const qEl = document.getElementById('q');
+const goEl = document.getElementById('go');
+
+const chips = document.getElementById('chips');
+EXAMPLES.forEach(x=>{const c=document.createElement('span');c.className='chip';c.textContent=x;c.onclick=()=>{qEl.value=x;ask();};chips.appendChild(c);});
+
+fetch('/health').then(r=>r.json()).then(h=>{
+  document.getElementById('provider').textContent = 'LLM: '+h.providers.llm+' · embeddings: '+h.providers.embeddings;
+  if(!h.index_ready){document.getElementById('hint').textContent='Index not built yet — run: python -m app.ingest';}
+}).catch(()=>{});
+
+function esc(s){return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+
+async function ask(){
+  const q = qEl.value.trim();
+  if(!q) return;
+  goEl.disabled=true; goEl.innerHTML='<span class="spinner"></span>';
+  try{
+    const res = await fetch('/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q})});
+    if(!res.ok){const e=await res.json().catch(()=>({detail:res.statusText}));throw new Error(e.detail||'error');}
+    const d = await res.json();
+    render(d);
+  }catch(err){
+    out.innerHTML = '<div class="card"><div class="answer">⚠️ '+esc(err.message)+'</div></div>' + out.innerHTML;
+  }finally{
+    goEl.disabled=false; goEl.textContent='Ask';
+  }
+}
+
+function render(d){
+  const badge = d.grounded ? '<span class="badge grounded">grounded</span>'
+                           : '<span class="badge ungrounded">not in docs</span>';
+  let cites='';
+  if(d.citations && d.citations.length){
+    cites = '<div class="cites"><h4>Sources</h4>' + d.citations.map(c=>
+      '<div class="cite"><span class="score">'+(c.score*100).toFixed(0)+'% match</span>'+
+      '<span class="src">['+c.tag+'] '+esc(c.source)+'</span> — '+esc(c.title)+
+      '<div class="snip">'+esc(c.snippet)+'…</div></div>').join('') + '</div>';
+  }
+  const card = '<div class="card">'+badge+
+    '<div class="answer"><b>Q:</b> '+esc(d.question)+'</div>'+
+    '<div class="answer">'+esc(d.answer)+'</div>'+cites+'</div>';
+  out.innerHTML = card + out.innerHTML;
+  qEl.value='';
+}
+
+goEl.onclick = ask;
+qEl.addEventListener('keydown', e=>{ if(e.key==='Enter') ask(); });
+</script>
+</body>
+</html>

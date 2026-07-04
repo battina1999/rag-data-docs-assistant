@@ -1,0 +1,59 @@
+warehouse: airline_dwh
+description: >
+  Airline operations analytics warehouse (the platform documented in Project 1).
+  Kimball star schema at the grain of one flight, built with dbt.
+tables:
+  - name: fact_flights
+    layer: marts
+    grain: one row per flight
+    description: Central fact table with delay measures and foreign keys to all dimensions.
+    lineage: raw.flights -> staging.stg_flights -> marts.fact_flights
+    columns:
+      - {name: flight_id, type: bigint, description: Natural key of a flight event}
+      - {name: date_key, type: integer, description: FK to dim_date (YYYYMMDD)}
+      - {name: origin_airport_key, type: varchar, description: FK to dim_airport (departure)}
+      - {name: dest_airport_key, type: varchar, description: FK to dim_airport (arrival)}
+      - {name: airline_key, type: varchar, description: FK to dim_airline}
+      - {name: dep_delay_min, type: integer, description: Departure delay in minutes; -9999 sentinel cleaned to NULL in staging}
+      - {name: arr_delay_min, type: integer, description: Arrival delay in minutes}
+      - {name: is_cancelled, type: boolean, description: True if the flight was cancelled}
+      - {name: is_delayed, type: boolean, description: True if arrival delay >= 15 minutes}
+      - {name: is_on_time, type: boolean, description: True if not cancelled and arrival delay < 15 minutes}
+      - {name: delay_bucket, type: varchar, description: early / on_time / minor_delay / major_delay / severe_delay}
+      - {name: weather_delay_min, type: integer, description: Minutes of delay attributed to weather}
+  - name: dim_airport
+    layer: marts
+    grain: one row per airport
+    description: Airport dimension with hub flag and region rollup.
+    lineage: raw.airports -> staging.stg_airports -> marts.dim_airport
+    columns:
+      - {name: airport_key, type: varchar, description: Hashed surrogate key}
+      - {name: airport_code, type: varchar, description: 3-letter IATA code}
+      - {name: city, type: varchar, description: Airport city (title-cased in staging)}
+      - {name: is_major_hub, type: boolean, description: True when hub_weight >= 7}
+      - {name: region, type: varchar, description: West / Midwest / Southeast / Northeast / Mountain-Southwest}
+  - name: dim_airline
+    layer: marts
+    grain: one row per carrier
+    description: Airline dimension with carrier-type classification.
+    lineage: raw.carriers -> staging.stg_carriers -> marts.dim_airline
+    columns:
+      - {name: airline_key, type: varchar, description: Hashed surrogate key}
+      - {name: carrier_code, type: varchar, description: 2-letter carrier code}
+      - {name: carrier_type, type: varchar, description: Low-Cost Carrier or Legacy/Network Carrier}
+  - name: dim_date
+    layer: marts
+    grain: one row per calendar day
+    description: Conformed date dimension covering the data range.
+    lineage: generated from stg_flights date range
+    columns:
+      - {name: date_key, type: integer, description: YYYYMMDD integer key}
+      - {name: is_weekend, type: boolean, description: True for Saturday/Sunday}
+  - name: fact_flight_delays
+    layer: marts
+    grain: one row per flight per contributing delay cause
+    description: Unpivoted delay-cause fact for cause analysis.
+    lineage: marts.fact_flights -> marts.fact_flight_delays
+    columns:
+      - {name: delay_cause, type: varchar, description: Carrier / Weather / NAS / Security / Late Aircraft}
+      - {name: delay_minutes, type: integer, description: Minutes attributed to this cause}

@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1140 780" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1140" height="780" fill="#f8fafc"/>
+  <text x="570" y="40" text-anchor="middle" font-size="25" font-weight="700" fill="#0f172a">RAG-Based Data Documentation Assistant</text>
+  <text x="570" y="64" text-anchor="middle" font-size="13.5" fill="#64748b">Ask natural-language questions about data pipelines, schemas &amp; business rules — grounded answers with citations, safe fallback when undocumented</text>
+
+  <!-- provider seam -->
+  <rect x="360" y="86" width="420" height="30" rx="15" fill="#ede9fe" stroke="#8b5cf6"/>
+  <text x="570" y="106" text-anchor="middle" font-size="12" font-weight="600" fill="#6d28d9">Provider seam:  OpenAI (embeddings + GPT) by default  ·  local deterministic fallback for offline / tests</text>
+
+  <!-- ================= INGESTION ================= -->
+  <text x="40" y="150" font-size="13" font-weight="700" fill="#1e3a8a">① INGESTION  (build the index)</text>
+  <g font-size="12" font-weight="600">
+    <rect x="40" y="164" width="185" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6"/>
+    <text x="132" y="182" text-anchor="middle" fill="#1e40af">Project 1 docs</text>
+    <text x="132" y="197" text-anchor="middle" font-size="10" font-weight="400" fill="#3b82f6">README · architecture</text>
+    <rect x="40" y="212" width="185" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6"/>
+    <text x="132" y="230" text-anchor="middle" fill="#1e40af">Synthetic data-eng docs</text>
+    <text x="132" y="245" text-anchor="middle" font-size="10" font-weight="400" fill="#3b82f6">runbooks · rules</text>
+    <rect x="40" y="260" width="185" height="40" rx="8" fill="#dbeafe" stroke="#3b82f6"/>
+    <text x="132" y="278" text-anchor="middle" fill="#1e40af">YAML data dictionaries</text>
+    <text x="132" y="293" text-anchor="middle" font-size="10" font-weight="400" fill="#3b82f6">tables · columns · lineage</text>
+  </g>
+  <path d="M225,232 L258,232" stroke="#475569" stroke-width="2" marker-end="url(#arr)"/>
+
+  <rect x="260" y="196" width="150" height="72" rx="9" fill="#ccfbf1" stroke="#14b8a6" stroke-width="2"/>
+  <text x="335" y="226" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0f766e">Load + Chunk</text>
+  <text x="335" y="244" text-anchor="middle" font-size="10" fill="#0d9488">recursive splitter</text>
+  <text x="335" y="258" text-anchor="middle" font-size="10" fill="#0d9488">+ metadata</text>
+  <path d="M410,232 L443,232" stroke="#475569" stroke-width="2" marker-end="url(#arr)"/>
+
+  <rect x="445" y="196" width="150" height="72" rx="9" fill="#ccfbf1" stroke="#14b8a6" stroke-width="2"/>
+  <text x="520" y="228" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0f766e">Embed</text>
+  <text x="520" y="248" text-anchor="middle" font-size="10" fill="#0d9488">OpenAI / local vectors</text>
+  <path d="M595,232 L628,232" stroke="#475569" stroke-width="2" marker-end="url(#arr)"/>
+
+  <rect x="630" y="188" width="180" height="42" rx="9" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="720" y="214" text-anchor="middle" font-size="12.5" font-weight="700" fill="#b45309">FAISS vector index</text>
+  <rect x="630" y="238" width="180" height="42" rx="9" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="720" y="258" text-anchor="middle" font-size="12.5" font-weight="700" fill="#b45309">SQLite catalog</text>
+  <text x="720" y="272" text-anchor="middle" font-size="9.5" fill="#a16207">exact table/column lookups (SQL)</text>
+
+  <line x1="40" y1="325" x2="1100" y2="325" stroke="#e2e8f0" stroke-width="1.5"/>
+
+  <!-- ================= QUERY ================= -->
+  <text x="40" y="360" font-size="13" font-weight="700" fill="#166534">② QUERY  (answer a question)</text>
+
+  <rect x="40" y="378" width="150" height="60" rx="9" fill="#e2e8f0" stroke="#64748b" stroke-width="2"/>
+  <text x="115" y="404" text-anchor="middle" font-size="12.5" font-weight="700" fill="#334155">User question</text>
+  <text x="115" y="422" text-anchor="middle" font-size="10" fill="#475569">technical or business</text>
+  <path d="M190,408 L223,408" stroke="#475569" stroke-width="2" marker-end="url(#arr)"/>
+
+  <rect x="225" y="378" width="160" height="60" rx="9" fill="#ccfbf1" stroke="#14b8a6" stroke-width="2"/>
+  <text x="305" y="402" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0f766e">Retriever</text>
+  <text x="305" y="420" text-anchor="middle" font-size="10" fill="#0d9488">cosine relevance (FAISS)</text>
+  <path d="M305,378 L305,300 L810,300 L810,232 L812,232" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5 4" fill="none" marker-end="url(#arr)"/>
+  <text x="640" y="294" font-size="9.5" fill="#94a3b8">reads FAISS index</text>
+  <path d="M385,408 L423,408" stroke="#475569" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- gate diamond -->
+  <polygon points="500,378 560,408 500,438 440,408" fill="#ffe4e6" stroke="#f43f5e" stroke-width="2"/>
+  <text x="500" y="404" text-anchor="middle" font-size="10.5" font-weight="700" fill="#be123c">score ≥</text>
+  <text x="500" y="418" text-anchor="middle" font-size="10.5" font-weight="700" fill="#be123c">threshold?</text>
+
+  <path d="M560,408 L598,408" stroke="#16a34a" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="578" y="400" text-anchor="middle" font-size="10" font-weight="700" fill="#16a34a">yes</text>
+  <path d="M500,438 L500,486" stroke="#c1435c" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="516" y="466" font-size="10" font-weight="700" fill="#c1435c">no</text>
+
+  <rect x="600" y="374" width="170" height="68" rx="9" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+  <text x="685" y="398" text-anchor="middle" font-size="12" font-weight="700" fill="#15803d">Grounded prompt</text>
+  <text x="685" y="415" text-anchor="middle" font-size="9.5" fill="#16a34a">"answer only from context,</text>
+  <text x="685" y="428" text-anchor="middle" font-size="9.5" fill="#16a34a">cite sources [S#]"</text>
+  <path d="M770,408 L803,408" stroke="#475569" stroke-width="2" marker-end="url(#arr)"/>
+
+  <rect x="805" y="374" width="120" height="68" rx="9" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+  <text x="865" y="404" text-anchor="middle" font-size="12.5" font-weight="700" fill="#15803d">LLM</text>
+  <text x="865" y="422" text-anchor="middle" font-size="9.5" fill="#16a34a">OpenAI / local</text>
+  <path d="M925,408 L958,408" stroke="#475569" stroke-width="2" marker-end="url(#arr)"/>
+
+  <rect x="960" y="368" width="140" height="80" rx="9" fill="#1f3b5c"/>
+  <text x="1030" y="400" text-anchor="middle" font-size="12.5" font-weight="700" fill="#fff">Answer</text>
+  <text x="1030" y="420" text-anchor="middle" font-size="10.5" fill="#cbd5e1">+ citations</text>
+  <text x="1030" y="436" text-anchor="middle" font-size="10.5" fill="#cbd5e1">+ sources</text>
+
+  <rect x="410" y="486" width="290" height="46" rx="9" fill="#ffe4e6" stroke="#f43f5e" stroke-width="2"/>
+  <text x="555" y="506" text-anchor="middle" font-size="12" font-weight="700" fill="#be123c">Fallback: "not in the documentation"</text>
+  <text x="555" y="522" text-anchor="middle" font-size="10" fill="#e11d48">anti-hallucination — LLM is never called</text>
+
+  <!-- serving + ops -->
+  <rect x="40" y="576" width="1060" height="58" rx="10" fill="#eff6ff" stroke="#3b82f6" stroke-dasharray="6 4"/>
+  <text x="60" y="598" font-size="12" font-weight="700" fill="#1d4ed8">Served by FastAPI</text>
+  <text x="60" y="616" font-size="10.5" fill="#3b82f6">POST /ask · GET /health · GET /catalog/* · chat UI · OpenAPI /docs</text>
+  <text x="640" y="598" font-size="12" font-weight="700" fill="#1d4ed8">Evaluated + Packaged</text>
+  <text x="640" y="616" font-size="10.5" fill="#3b82f6">eval harness (answer / refusal / retrieval / citation) · Docker · pytest</text>
+
+  <text x="40" y="664" font-size="12" font-weight="700" fill="#334155">Stack</text>
+  <text x="40" y="684" font-size="11.5" fill="#475569">Python · LangChain · FAISS · OpenAI API · FastAPI · SQLite (SQL catalog) · Docker</text>
+  <text x="40" y="704" font-size="11" fill="#64748b">Grounded answers with citations · relevance-gated fallback · 100% refusal accuracy on the eval set · runs with or without an API key</text>
+</svg>

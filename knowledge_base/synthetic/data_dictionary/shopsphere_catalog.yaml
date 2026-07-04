@@ -1,0 +1,53 @@
+warehouse: shopsphere_dwh
+description: >
+  ShopSphere is a fictional e-commerce company. This catalog documents its
+  analytics warehouse so the assistant can answer questions across more than
+  one domain.
+tables:
+  - name: fact_orders
+    layer: marts
+    grain: one row per order line
+    description: Order-line fact with revenue and fulfilment measures.
+    lineage: raw.orders + raw.order_items -> staging -> marts.fact_orders
+    columns:
+      - {name: order_line_id, type: bigint, description: Surrogate key of an order line}
+      - {name: order_id, type: bigint, description: Degenerate order identifier}
+      - {name: customer_key, type: varchar, description: FK to dim_customer}
+      - {name: product_key, type: varchar, description: FK to dim_product}
+      - {name: order_date_key, type: integer, description: FK to dim_date}
+      - {name: quantity, type: integer, description: Units ordered on the line}
+      - {name: gross_revenue, type: decimal, description: quantity * unit_price before discounts}
+      - {name: discount_amount, type: decimal, description: Line-level discount applied}
+      - {name: net_revenue, type: decimal, description: gross_revenue - discount_amount (GMV contribution)}
+      - {name: is_returned, type: boolean, description: True if the line was later returned}
+  - name: dim_customer
+    layer: marts
+    grain: one row per customer (SCD type 2)
+    description: Customer dimension with slowly-changing history.
+    lineage: raw.customers -> staging.stg_customers -> marts.dim_customer
+    columns:
+      - {name: customer_key, type: varchar, description: Surrogate key (versioned per change)}
+      - {name: customer_id, type: bigint, description: Natural customer id}
+      - {name: segment, type: varchar, description: Consumer / SMB / Enterprise}
+      - {name: is_active, type: boolean, description: Placed at least one order in the trailing 90 days}
+      - {name: valid_from, type: date, description: SCD2 effective start}
+      - {name: valid_to, type: date, description: SCD2 effective end (NULL if current)}
+  - name: dim_product
+    layer: marts
+    grain: one row per product
+    description: Product dimension with category hierarchy.
+    lineage: raw.products -> staging.stg_products -> marts.dim_product
+    columns:
+      - {name: product_key, type: varchar, description: Surrogate key}
+      - {name: category, type: varchar, description: Top-level merchandising category}
+      - {name: unit_price, type: decimal, description: Current list price}
+  - name: fact_web_events
+    layer: marts
+    grain: one row per web session event
+    description: Clickstream events for funnel and conversion analysis.
+    lineage: raw.events (Kafka) -> staging.stg_events -> marts.fact_web_events
+    columns:
+      - {name: event_id, type: varchar, description: Unique event id}
+      - {name: session_id, type: varchar, description: Web session identifier}
+      - {name: event_type, type: varchar, description: view / add_to_cart / checkout / purchase}
+      - {name: customer_key, type: varchar, description: FK to dim_customer (nullable for anonymous)}

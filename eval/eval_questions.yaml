@@ -1,0 +1,34 @@
+# Labeled evaluation set.
+#   expected_source : a filename substring the retriever should surface
+#   should_answer   : true  -> answer must be grounded (in the docs)
+#                     false -> assistant must refuse (anti-hallucination)
+- question: "What is the grain of the fact_flights table?"
+  expected_source: "airline_dwh_catalog"
+  should_answer: true
+- question: "How is on-time percentage defined?"
+  expected_source: "metric_definitions"
+  should_answer: true
+- question: "What are the delay cause categories?"
+  expected_source: "metric_definitions"
+  should_answer: true
+- question: "What does the cancellation code B mean?"
+  expected_source: "metric_definitions"
+  should_answer: true
+- question: "What is GMV for ShopSphere?"
+  expected_source: "metric_definitions"
+  should_answer: true
+- question: "What is the data freshness SLA for the core marts?"
+  expected_source: "data_quality_and_governance"
+  should_answer: true
+- question: "How are duplicate events handled in cleaning?"
+  expected_source: "data_quality_and_governance"
+  should_answer: true
+- question: "What time does the nightly batch run?"
+  expected_source: "etl_runbook"
+  should_answer: true
+- question: "Who won the 2018 FIFA world cup?"
+  expected_source: null
+  should_answer: false
+- question: "What is the best pizza topping?"
+  expected_source: null
+  should_answer: false

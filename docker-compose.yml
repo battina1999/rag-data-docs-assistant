@@ -1,0 +1,13 @@
+services:
+  assistant:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      # Set OPENAI_API_KEY in your shell/.env for real answers; otherwise the
+      # local deterministic provider is used automatically.
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - EMBEDDINGS_PROVIDER=${EMBEDDINGS_PROVIDER:-auto}
+      - LLM_PROVIDER=${LLM_PROVIDER:-auto}
+    volumes:
+      - ./:/app
