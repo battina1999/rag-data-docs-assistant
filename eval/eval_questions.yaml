@@ -1,34 +1,124 @@
-# Labeled evaluation set.
-#   expected_source : a filename substring the retriever should surface
-#   should_answer   : true  -> answer must be grounded (in the docs)
-#                     false -> assistant must refuse (anti-hallucination)
-- question: "What is the grain of the fact_flights table?"
-  expected_source: "airline_dwh_catalog"
-  should_answer: true
-- question: "How is on-time percentage defined?"
-  expected_source: "metric_definitions"
-  should_answer: true
-- question: "What are the delay cause categories?"
-  expected_source: "metric_definitions"
-  should_answer: true
-- question: "What does the cancellation code B mean?"
-  expected_source: "metric_definitions"
-  should_answer: true
-- question: "What is GMV for ShopSphere?"
-  expected_source: "metric_definitions"
-  should_answer: true
-- question: "What is the data freshness SLA for the core marts?"
-  expected_source: "data_quality_and_governance"
-  should_answer: true
-- question: "How are duplicate events handled in cleaning?"
-  expected_source: "data_quality_and_governance"
-  should_answer: true
-- question: "What time does the nightly batch run?"
-  expected_source: "etl_runbook"
-  should_answer: true
-- question: "Who won the 2018 FIFA world cup?"
-  expected_source: null
-  should_answer: false
-- question: "What is the best pizza topping?"
-  expected_source: null
-  should_answer: false
+# Labeled evaluation set: 102 questions (72 answerable + 30 out-of-scope traps).
+#   expected_source : filename substring the retriever should surface
+#   should_answer   : false -> the assistant must refuse (anti-hallucination)
+
+# ---------- KPI definitions (airline_kpi_definitions) ----------
+- {question: "How is on-time percentage defined?", expected_source: "kpi_definitions", should_answer: true}
+- {question: "What is the formula for completion factor?", expected_source: "kpi_definitions", should_answer: true}
+- {question: "Why can an airline that cancels flights look more on-time?", expected_source: "kpi_definitions", should_answer: true}
+- {question: "What threshold defines a delayed flight?", expected_source: "kpi_definitions", should_answer: true}
+- {question: "Why are routes with under 20 flights suppressed?", expected_source: "kpi_definitions", should_answer: true}
+- {question: "How should average arrival delay be interpreted given early arrivals?", expected_source: "kpi_definitions", should_answer: true}
+- {question: "Which timezone convention do daily KPI rollups use?", expected_source: "kpi_definitions", should_answer: true}
+- {question: "What does the 15-minute threshold correspond to in DOT terms?", expected_source: "kpi_definitions", should_answer: true}
+- {question: "Is route reliability directional between airports?", expected_source: "kpi_definitions", should_answer: true}
+- {question: "Why is late aircraft delay double-counted by design?", expected_source: "kpi_definitions", should_answer: true}
+
+# ---------- Model card (airline_model_card) ----------
+- {question: "What label does the delay prediction model use?", expected_source: "model_card", should_answer: true}
+- {question: "Why was the data split by date instead of randomly?", expected_source: "model_card", should_answer: true}
+- {question: "What are the intended uses of the delay model?", expected_source: "model_card", should_answer: true}
+- {question: "Why is the month feature excluded from the model?", expected_source: "model_card", should_answer: true}
+- {question: "What is the biggest missing signal in the delay model?", expected_source: "model_card", should_answer: true}
+- {question: "How is the operating threshold for the classifier chosen?", expected_source: "model_card", should_answer: true}
+- {question: "What happens with brand new routes in the model?", expected_source: "model_card", should_answer: true}
+- {question: "Can the delay model be used for passenger-facing decisions?", expected_source: "model_card", should_answer: true}
+- {question: "How often should the delay model be retrained?", expected_source: "model_card", should_answer: true}
+- {question: "Which months form the training window for the model?", expected_source: "model_card", should_answer: true}
+
+# ---------- Data profile (airline_data_profile) ----------
+- {question: "How many rows of BTS data were profiled?", expected_source: "data_profile", should_answer: true}
+- {question: "Why do cancelled flights have NULL departure delays?", expected_source: "data_profile", should_answer: true}
+- {question: "How are duplicate natural keys handled in the pipeline?", expected_source: "data_profile", should_answer: true}
+- {question: "How is CRSDepTime encoded in the raw BTS files?", expected_source: "data_profile", should_answer: true}
+- {question: "What timezone do BTS flight times use?", expected_source: "data_profile", should_answer: true}
+- {question: "When does BTS populate the delay cause columns?", expected_source: "data_profile", should_answer: true}
+- {question: "What is the S3 landing layout for raw BTS files?", expected_source: "data_profile", should_answer: true}
+- {question: "How many distinct airports are in the profiled data?", expected_source: "data_profile", should_answer: true}
+
+# ---------- Platform architecture / README ----------
+- {question: "What is the grain of the fact_flights table?", expected_source: "airline", should_answer: true}
+- {question: "Which layers does data flow through in the warehouse?", expected_source: "architecture", should_answer: true}
+- {question: "Why does the platform use surrogate keys?", expected_source: "architecture", should_answer: true}
+- {question: "How does the platform move from DuckDB to Snowflake?", expected_source: "airline", should_answer: true}
+- {question: "What does the reconciliation step prove?", expected_source: "architecture", should_answer: true}
+- {question: "What does fact_flight_delays unpivot?", expected_source: "architecture", should_answer: true}
+- {question: "What orchestrates the daily pipeline run?", expected_source: "airline", should_answer: true}
+- {question: "Which tool validates the raw layer?", expected_source: "airline", should_answer: true}
+- {question: "What is the medallion-style layering in this platform?", expected_source: "architecture", should_answer: true}
+- {question: "Where are cancellation reason codes mapped to readable labels?", expected_source: "architecture", should_answer: true}
+- {question: "What is the delay_bucket column?", expected_source: "architecture", should_answer: true}
+- {question: "How is the -9999 sentinel value handled?", expected_source: "airline", should_answer: true}
+
+# ---------- Power BI semantic model ----------
+- {question: "How does Power BI connect to the marts locally?", expected_source: "powerbi", should_answer: true}
+- {question: "Which relationship is inactive in the Power BI model?", expected_source: "powerbi", should_answer: true}
+- {question: "Which table should be marked as the date table in Power BI?", expected_source: "powerbi", should_answer: true}
+- {question: "What DAX measure computes completion factor?", expected_source: "powerbi", should_answer: true}
+- {question: "What report pages does the Power BI dashboard have?", expected_source: "powerbi", should_answer: true}
+
+# ---------- Warehouse catalogs (YAML dictionaries) ----------
+- {question: "What columns are in the fact_flights table?", expected_source: "airline_dwh_catalog", should_answer: true}
+- {question: "What is the lineage of dim_airport?", expected_source: "airline_dwh_catalog", should_answer: true}
+- {question: "What does the is_major_hub column mean?", expected_source: "airline_dwh_catalog", should_answer: true}
+- {question: "What is the grain of fact_orders in ShopSphere?", expected_source: "shopsphere", should_answer: true}
+- {question: "How is net revenue calculated for ShopSphere orders?", expected_source: "shopsphere", should_answer: true}
+- {question: "Which ShopSphere dimension uses SCD type 2?", expected_source: "shopsphere", should_answer: true}
+- {question: "What event types exist in fact_web_events?", expected_source: "shopsphere", should_answer: true}
+- {question: "What does customer_key reference in fact_orders?", expected_source: "shopsphere", should_answer: true}
+
+# ---------- Runbooks ----------
+- {question: "What time does the nightly batch run?", expected_source: "etl_runbook", should_answer: true}
+- {question: "What is the SLA for refreshing the marts?", expected_source: "etl_runbook", should_answer: true}
+- {question: "How many times does Airflow retry a failed task?", expected_source: "etl_runbook", should_answer: true}
+- {question: "How do I backfill a date range?", expected_source: "etl_runbook", should_answer: true}
+- {question: "What should I check when a dbt relationships test fails?", expected_source: "etl_runbook", should_answer: true}
+- {question: "What defines a SEV1 data incident?", expected_source: "incident_playbook", should_answer: true}
+- {question: "What are the first steps when a data incident fires?", expected_source: "incident_playbook", should_answer: true}
+- {question: "How do we roll back bad marts?", expected_source: "incident_playbook", should_answer: true}
+- {question: "How often should SEV1 incident updates be posted?", expected_source: "incident_playbook", should_answer: true}
+- {question: "Why should you never hand-edit marts during an incident?", expected_source: "incident_playbook", should_answer: true}
+
+# ---------- Business rules / governance ----------
+- {question: "What is GMV for ShopSphere?", expected_source: "metric_definitions", should_answer: true}
+- {question: "What makes a customer active?", expected_source: "metric_definitions", should_answer: true}
+- {question: "What does cancellation code B mean?", expected_source: "metric_definitions", should_answer: true}
+- {question: "How is conversion rate defined?", expected_source: "metric_definitions", should_answer: true}
+- {question: "How many decimal places are percentages displayed with?", expected_source: "metric_definitions", should_answer: true}
+- {question: "Where is customer PII allowed to live?", expected_source: "data_quality_and_governance", should_answer: true}
+- {question: "What is the freshness SLA for core marts?", expected_source: "data_quality_and_governance", should_answer: true}
+- {question: "How are duplicate events de-duplicated?", expected_source: "data_quality_and_governance", should_answer: true}
+- {question: "Who should questions about a table go to?", expected_source: "data_quality_and_governance", should_answer: true}
+- {question: "How often is schema access reviewed?", expected_source: "data_quality_and_governance", should_answer: true}
+
+# ---------- OUT-OF-SCOPE TRAPS (must refuse) ----------
+- {question: "Who won the 2018 FIFA world cup?", expected_source: null, should_answer: false}
+- {question: "What is the best pizza topping?", expected_source: null, should_answer: false}
+- {question: "Write me a poem about the ocean", expected_source: null, should_answer: false}
+- {question: "What is Databricks pricing per DBU?", expected_source: null, should_answer: false}
+- {question: "How do I set up a Kubernetes cluster?", expected_source: null, should_answer: false}
+- {question: "What is the capital of Australia?", expected_source: null, should_answer: false}
+- {question: "Recommend a good sci-fi movie", expected_source: null, should_answer: false}
+- {question: "How tall is Mount Everest?", expected_source: null, should_answer: false}
+- {question: "What's the weather in Chicago tomorrow?", expected_source: null, should_answer: false}
+- {question: "Explain quantum entanglement", expected_source: null, should_answer: false}
+- {question: "What stocks should I buy this year?", expected_source: null, should_answer: false}
+- {question: "Who is the CEO of Snowflake the company?", expected_source: null, should_answer: false}
+- {question: "Give me a recipe for chicken biryani", expected_source: null, should_answer: false}
+- {question: "How do I train for a marathon?", expected_source: null, should_answer: false}
+- {question: "What are United Airlines' baggage fees?", expected_source: null, should_answer: false}
+- {question: "Which seat is best on a 737?", expected_source: null, should_answer: false}
+- {question: "How do I file a flight delay compensation claim?", expected_source: null, should_answer: false}
+- {question: "What was Delta's stock price last week?", expected_source: null, should_answer: false}
+- {question: "How many employees does American Airlines have?", expected_source: null, should_answer: false}
+- {question: "What is the fastest commercial aircraft?", expected_source: null, should_answer: false}
+- {question: "Summarize the history of the Roman empire", expected_source: null, should_answer: false}
+- {question: "What is the meaning of life?", expected_source: null, should_answer: false}
+- {question: "Translate hello to Japanese", expected_source: null, should_answer: false}
+- {question: "What laptop should I buy for gaming?", expected_source: null, should_answer: false}
+- {question: "How do vaccines work?", expected_source: null, should_answer: false}
+- {question: "Best beaches in Florida?", expected_source: null, should_answer: false}
+- {question: "How much does a data engineer earn in Texas?", expected_source: null, should_answer: false}
+- {question: "Write a SQL query to reverse a string", expected_source: null, should_answer: false}
+- {question: "What's the difference between TCP and UDP?", expected_source: null, should_answer: false}
+- {question: "Plan a 3-day trip to New York", expected_source: null, should_answer: false}
