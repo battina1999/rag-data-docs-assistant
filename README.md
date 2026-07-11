@@ -85,16 +85,31 @@ Run it in Docker: `make docker-up`.
 3. Otherwise the LLM is prompted to answer **only** from the retrieved context
    and cite sources as `[S#]`; the response carries those citations.
 
+## Retrieval: hybrid BM25 + vector
+
+Retrieval merges FAISS vector search with **BM25 lexical search** via
+Reciprocal Rank Fusion. The anti-hallucination gate uses **two signals**: the
+absolute vector relevance threshold *and* a query-term coverage check (enough
+of the question's content words must actually appear in the retrieved context
+— this kills vocabulary-adjacent traps like "airline baggage fees").
+
 ## Evaluation
 
-`make eval` runs a labeled question set and reports:
+`make eval` runs a **102-question labeled set** (72 answerable spanning 12 real
+documents + **30 out-of-scope traps**, many deliberately vocabulary-adjacent).
+Benchmark on the local provider (`python -m eval.evaluate --compare`):
 
-| Metric | Local provider | What it means |
+| Metric | Vector-only | Hybrid (BM25 + vector) |
 |---|---|---|
-| Answer accuracy | 100% | answers the questions it should |
-| **Refusal accuracy** | **100%** | refuses out-of-scope questions (no hallucination) |
-| Citation coverage | 100% | grounded answers carry ≥1 citation |
-| Retrieval hit-rate | 75% | expected source retrieved (higher with OpenAI embeddings) |
+| Retrieval hit-rate | 84% (61/73) | **95% (69/73)** |
+| Answer accuracy | 81% (59/73) | **89% (65/73)** |
+| Refusal accuracy | 97% (29/30) | **93% (28/30)** |
+| Citation coverage | 100% | **100%** |
+
+Honest read: hybrid recovers +8pts of answers and +11pts of retrieval at a
+−4pt refusal trade-off; the two-signal gate keeps traps ≥93% refused where a
+naive similarity threshold alone scored **40%** on the same trap set. OpenAI
+embeddings push retrieval higher still.
 
 ## Project structure
 
