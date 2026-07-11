@@ -2,6 +2,15 @@ name: Publish Hugging Face Space
 
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: Deployment mode (Docker API or free browser-only fallback)
+        required: true
+        default: docker
+        type: choice
+        options:
+          - docker
+          - static
 
 permissions:
   id-token: write
@@ -15,9 +24,10 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Prepare Docker Space
+        if: inputs.mode == 'docker'
         run: |
           mkdir -p "$RUNNER_TEMP/space"
-          rsync -a --exclude='.git' --exclude='.github' ./ "$RUNNER_TEMP/space/"
+          rsync -a --exclude='.git' --exclude='.github' --exclude='hf_static' ./ "$RUNNER_TEMP/space/"
           python - <<'PY'
           import os
           from pathlib import Path
@@ -37,6 +47,36 @@ jobs:
           readme.write_text(metadata + readme.read_text())
           PY
 
+      - name: Prepare free static fallback
+        if: inputs.mode == 'static'
+        run: |
+          mkdir -p "$RUNNER_TEMP/space"
+          cp hf_static/index.html "$RUNNER_TEMP/space/index.html"
+          python - <<'PY'
+          import os
+          from pathlib import Path
+
+          readme = Path(os.environ["RUNNER_TEMP"]) / "space" / "README.md"
+          readme.write_text("""---
+          title: RAG Data Docs Assistant
+          emoji: 🔎
+          colorFrom: blue
+          colorTo: indigo
+          sdk: static
+          app_file: index.html
+          pinned: true
+          short_description: Free browser-only retrieval demo over curated data docs.
+          ---
+
+          # RAG Data Docs Assistant — static fallback
+
+          This free mode performs lexical retrieval and extractive passage selection
+          entirely in the browser. It does not call an external model or API. Run the
+          publisher again in `docker` mode when CPU Basic capacity is available to
+          restore the full FastAPI RAG service.
+          """)
+          PY
+
       - name: Install Hugging Face CLI
         run: |
           curl -LsSf https://hf.co/cli/install.sh | bash
@@ -45,8 +85,9 @@ jobs:
       - name: Publish Space
         env:
           HF_OIDC_RESOURCE: spaces/battina1999/data-docs-assistant
+          PUBLISH_MODE: ${{ inputs.mode }}
         run: >-
           hf upload battina1999/data-docs-assistant
           "$RUNNER_TEMP/space" .
           --repo-type space
-          --commit-message "Publish ${GITHUB_SHA::7}"
+          --commit-message "Publish ${PUBLISH_MODE} ${GITHUB_SHA::7}"
