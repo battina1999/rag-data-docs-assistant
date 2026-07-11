@@ -1,0 +1,52 @@
+name: Publish Hugging Face Space
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Prepare Docker Space
+        run: |
+          mkdir -p "$RUNNER_TEMP/space"
+          rsync -a --exclude='.git' --exclude='.github' ./ "$RUNNER_TEMP/space/"
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          readme = Path(os.environ["RUNNER_TEMP"]) / "space" / "README.md"
+          metadata = """---
+          title: RAG Data Docs Assistant
+          emoji: 🔎
+          colorFrom: blue
+          colorTo: indigo
+          sdk: docker
+          app_port: 7860
+          pinned: true
+          short_description: Grounded RAG over data documentation with citations and safe refusal.
+          ---
+
+          """
+          readme.write_text(metadata + readme.read_text())
+          PY
+
+      - name: Install Hugging Face CLI
+        run: |
+          curl -LsSf https://hf.co/cli/install.sh | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Publish Space
+        env:
+          HF_OIDC_RESOURCE: spaces/battina1999/data-docs-assistant
+        run: >-
+          hf upload battina1999/data-docs-assistant
+          "$RUNNER_TEMP/space" .
+          --repo-type space
+          --commit-message "Publish ${GITHUB_SHA::7}"
