@@ -30,7 +30,7 @@ jobs:
           sdk: docker
           app_port: 7860
           pinned: true
-          short_description: Grounded RAG over data documentation with citations and safe refusal.
+          short_description: Grounded RAG for data docs with citations and safe refusal.
           ---
 
           """
