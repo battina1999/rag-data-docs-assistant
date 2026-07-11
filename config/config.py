@@ -34,6 +34,10 @@ class Settings:
     chunk_overlap: int = field(default_factory=lambda: int(_get("CHUNK_OVERLAP", "120")))
     top_k: int = field(default_factory=lambda: int(_get("TOP_K", "4")))
     relevance_threshold: float = field(default_factory=lambda: float(_get("RELEVANCE_THRESHOLD", "0.15")))
+    # 2nd anti-hallucination gate: minimum share of the question's content
+    # words that must appear in some retrieved chunk (lexical evidence guard;
+    # tuned on the 30-trap eval set: refusal 40% -> 93% on local embeddings)
+    coverage_threshold: float = field(default_factory=lambda: float(_get("COVERAGE_THRESHOLD", "0.4")))
 
     # --- paths ---
     kb_dir: Path = PROJECT_ROOT / "knowledge_base"
