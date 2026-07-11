@@ -9,6 +9,7 @@ langchain-openai>=0.1,<0.3
 # Vector store + tokenizer
 faiss-cpu>=1.8
 tiktoken>=0.7
+rank-bm25>=0.2.2,<0.3
 
 # LLM provider
 openai>=1.30
