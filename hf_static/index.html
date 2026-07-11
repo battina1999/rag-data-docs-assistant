@@ -1,0 +1,1218 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A free, browser-only retrieval demo over curated airline data-platform documentation.">
+  <title>Data Docs Assistant · Local Retrieval</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #102a43;
+      --ink-soft: #486581;
+      --navy: #0b2745;
+      --navy-2: #123a5f;
+      --teal: #0f8b8d;
+      --teal-dark: #086f72;
+      --mint: #dff7f2;
+      --mint-strong: #bfece2;
+      --cream: #fbfaf6;
+      --paper: rgba(255, 255, 255, 0.92);
+      --white: #fff;
+      --amber: #f5ae36;
+      --green: #1f9d68;
+      --line: #d9e2ec;
+      --line-strong: #bcccdc;
+      --shadow-sm: 0 10px 30px rgba(16, 42, 67, 0.08);
+      --shadow-lg: 0 24px 80px rgba(16, 42, 67, 0.14);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      background:
+        radial-gradient(circle at 8% 10%, rgba(15, 139, 141, 0.11), transparent 30rem),
+        radial-gradient(circle at 92% 18%, rgba(245, 174, 54, 0.12), transparent 25rem),
+        var(--cream);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+
+    a { color: inherit; }
+
+    button,
+    input { font: inherit; }
+
+    button { -webkit-tap-highlight-color: transparent; }
+
+    .skip-link {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 30;
+      padding: 9px 13px;
+      border-radius: 10px;
+      background: var(--white);
+      color: var(--navy);
+      transform: translateY(-150%);
+      transition: transform 160ms ease;
+    }
+
+    .skip-link:focus { transform: translateY(0); }
+
+    .shell {
+      width: min(1180px, calc(100% - 36px));
+      margin: 0 auto;
+    }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-bottom: 1px solid rgba(217, 226, 236, 0.8);
+      background: rgba(251, 250, 246, 0.82);
+      backdrop-filter: blur(18px);
+    }
+
+    .nav {
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 11px;
+      color: var(--navy);
+      font-weight: 820;
+      letter-spacing: -0.02em;
+      text-decoration: none;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: var(--navy);
+      color: var(--white);
+      box-shadow: 0 9px 22px rgba(11, 39, 69, 0.22);
+    }
+
+    .brand-mark svg { width: 20px; height: 20px; }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .nav-link,
+    .status-link {
+      min-height: 38px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--ink-soft);
+      font-size: 0.84rem;
+      font-weight: 720;
+      text-decoration: none;
+      transition: border-color 160ms ease, transform 160ms ease, background 160ms ease;
+    }
+
+    .nav-link:hover,
+    .status-link:hover {
+      transform: translateY(-1px);
+      border-color: var(--line-strong);
+      background: var(--white);
+    }
+
+    .status-link {
+      border-color: #b7e4cf;
+      background: #edfbf5;
+      color: #13724b;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 4px rgba(31, 157, 104, 0.12);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.65fr);
+      gap: 52px;
+      align-items: center;
+      padding: 82px 0 58px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 18px;
+      padding: 7px 11px;
+      border: 1px solid var(--mint-strong);
+      border-radius: 999px;
+      background: rgba(223, 247, 242, 0.76);
+      color: var(--teal-dark);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--teal);
+    }
+
+    h1 {
+      max-width: 790px;
+      margin: 0;
+      color: var(--navy);
+      font-size: clamp(2.65rem, 6vw, 5.7rem);
+      line-height: 0.98;
+      letter-spacing: -0.062em;
+    }
+
+    h1 span { color: var(--teal-dark); }
+
+    .hero-copy {
+      max-width: 720px;
+      margin: 25px 0 0;
+      color: var(--ink-soft);
+      font-size: clamp(1rem, 2vw, 1.18rem);
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 28px;
+    }
+
+    .button-primary,
+    .button-secondary {
+      min-height: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      padding: 11px 17px;
+      border-radius: 13px;
+      font-weight: 800;
+      text-decoration: none;
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+    }
+
+    .button-primary {
+      background: var(--navy);
+      color: var(--white);
+      box-shadow: 0 12px 28px rgba(11, 39, 69, 0.22);
+    }
+
+    .button-secondary {
+      border: 1px solid var(--line-strong);
+      background: rgba(255, 255, 255, 0.75);
+      color: var(--navy);
+    }
+
+    .button-primary:hover,
+    .button-secondary:hover { transform: translateY(-2px); }
+
+    .mode-card {
+      position: relative;
+      overflow: hidden;
+      padding: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 26px;
+      background: linear-gradient(145deg, var(--navy), var(--navy-2));
+      color: var(--white);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .mode-card::after {
+      content: "";
+      position: absolute;
+      right: -72px;
+      bottom: -100px;
+      width: 220px;
+      height: 220px;
+      border: 32px solid rgba(255, 255, 255, 0.06);
+      border-radius: 50%;
+    }
+
+    .mode-label {
+      position: relative;
+      z-index: 1;
+      margin: 0;
+      color: #bfece2;
+      font-size: 0.76rem;
+      font-weight: 850;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .mode-card h2 {
+      position: relative;
+      z-index: 1;
+      margin: 9px 0 7px;
+      font-size: 1.6rem;
+      letter-spacing: -0.035em;
+    }
+
+    .mode-card > p:not(.mode-label) {
+      position: relative;
+      z-index: 1;
+      margin: 0;
+      color: #d9e8f3;
+      font-size: 0.93rem;
+    }
+
+    .mode-list {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 11px;
+      margin: 22px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .mode-list li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.88rem;
+    }
+
+    .check {
+      width: 21px;
+      height: 21px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: rgba(191, 236, 226, 0.16);
+      color: #9ee4d5;
+      font-size: 0.75rem;
+      font-weight: 900;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 315px;
+      gap: 22px;
+      align-items: start;
+      padding: 18px 0 72px;
+    }
+
+    .panel {
+      border: 1px solid rgba(188, 204, 220, 0.88);
+      border-radius: var(--radius);
+      background: var(--paper);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .search-panel { overflow: hidden; }
+
+    .panel-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 24px 25px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-kicker {
+      margin: 0 0 4px;
+      color: var(--teal-dark);
+      font-size: 0.73rem;
+      font-weight: 850;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .panel-head h2,
+    .library-head h2 {
+      margin: 0;
+      color: var(--navy);
+      font-size: 1.45rem;
+      letter-spacing: -0.035em;
+    }
+
+    .local-pill {
+      flex: 0 0 auto;
+      padding: 7px 10px;
+      border: 1px solid var(--mint-strong);
+      border-radius: 999px;
+      background: var(--mint);
+      color: var(--teal-dark);
+      font-size: 0.74rem;
+      font-weight: 820;
+    }
+
+    .ask-form { padding: 23px 25px 20px; }
+
+    .ask-label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--ink);
+      font-size: 0.85rem;
+      font-weight: 760;
+    }
+
+    .ask-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .ask-input {
+      min-width: 0;
+      min-height: 54px;
+      padding: 13px 15px;
+      border: 1px solid var(--line-strong);
+      border-radius: 13px;
+      outline: none;
+      background: var(--white);
+      color: var(--ink);
+      box-shadow: inset 0 1px 2px rgba(16, 42, 67, 0.04);
+      transition: border-color 160ms ease, box-shadow 160ms ease;
+    }
+
+    .ask-input::placeholder { color: #829ab1; }
+
+    .ask-input:focus {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 4px rgba(15, 139, 141, 0.12);
+    }
+
+    .ask-button {
+      min-width: 118px;
+      border: 0;
+      border-radius: 13px;
+      background: var(--teal);
+      color: var(--white);
+      font-weight: 850;
+      cursor: pointer;
+      box-shadow: 0 10px 22px rgba(15, 139, 141, 0.22);
+      transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
+    }
+
+    .ask-button:hover {
+      transform: translateY(-1px);
+      background: var(--teal-dark);
+      box-shadow: 0 12px 26px rgba(15, 139, 141, 0.27);
+    }
+
+    .ask-button:active { transform: translateY(0); }
+
+    .ask-button:disabled { opacity: 0.62; cursor: wait; }
+
+    .examples {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 13px;
+    }
+
+    .example-chip {
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #f8fafc;
+      color: var(--ink-soft);
+      font-size: 0.76rem;
+      cursor: pointer;
+      transition: border-color 160ms ease, color 160ms ease, background 160ms ease;
+    }
+
+    .example-chip:hover {
+      border-color: var(--teal);
+      background: var(--mint);
+      color: var(--teal-dark);
+    }
+
+    .result-region {
+      min-height: 270px;
+      padding: 24px 25px 27px;
+      border-top: 1px solid var(--line);
+      background: rgba(248, 250, 252, 0.7);
+    }
+
+    .empty-state {
+      min-height: 220px;
+      display: grid;
+      place-items: center;
+      padding: 30px 18px;
+      text-align: center;
+    }
+
+    .empty-icon {
+      width: 54px;
+      height: 54px;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 14px;
+      border: 1px solid var(--mint-strong);
+      border-radius: 17px;
+      background: var(--mint);
+      color: var(--teal-dark);
+    }
+
+    .empty-icon svg { width: 25px; height: 25px; }
+
+    .empty-state h3 {
+      margin: 0 0 5px;
+      color: var(--navy);
+      font-size: 1.06rem;
+    }
+
+    .empty-state p {
+      max-width: 440px;
+      margin: 0;
+      color: var(--ink-soft);
+      font-size: 0.9rem;
+    }
+
+    .result-topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-bottom: 13px;
+    }
+
+    .result-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: var(--mint);
+      color: var(--teal-dark);
+      font-size: 0.72rem;
+      font-weight: 850;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .result-count { color: var(--ink-soft); font-size: 0.78rem; }
+
+    .result-question {
+      margin: 0 0 18px;
+      color: var(--navy);
+      font-size: clamp(1.18rem, 3vw, 1.62rem);
+      line-height: 1.26;
+      letter-spacing: -0.03em;
+    }
+
+    .evidence-label {
+      margin: 0 0 8px;
+      color: var(--ink-soft);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .extractive-answer {
+      margin: 0;
+      padding: 16px 17px;
+      border-left: 4px solid var(--teal);
+      border-radius: 0 13px 13px 0;
+      background: var(--white);
+      color: var(--ink);
+      font-size: 0.96rem;
+      line-height: 1.68;
+    }
+
+    mark {
+      padding: 0 2px;
+      border-radius: 3px;
+      background: #fff0bd;
+      color: inherit;
+    }
+
+    .source-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 19px;
+    }
+
+    .source-item {
+      padding: 13px 14px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    .source-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .source-title {
+      color: var(--navy);
+      font-size: 0.85rem;
+      font-weight: 820;
+      text-decoration: none;
+    }
+
+    .source-title:hover { text-decoration: underline; }
+
+    .match-score {
+      flex: 0 0 auto;
+      color: var(--teal-dark);
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+
+    .source-path {
+      overflow: hidden;
+      margin-top: 4px;
+      color: #627d98;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.69rem;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .no-match {
+      padding: 22px;
+      border: 1px dashed var(--line-strong);
+      border-radius: 15px;
+      background: var(--white);
+    }
+
+    .no-match h3 { margin: 0 0 7px; color: var(--navy); }
+
+    .no-match p { margin: 0; color: var(--ink-soft); font-size: 0.9rem; }
+
+    .method-panel {
+      position: sticky;
+      top: 94px;
+      padding: 24px;
+    }
+
+    .method-panel h2 {
+      margin: 0 0 5px;
+      color: var(--navy);
+      font-size: 1.15rem;
+      letter-spacing: -0.025em;
+    }
+
+    .method-intro {
+      margin: 0 0 20px;
+      color: var(--ink-soft);
+      font-size: 0.84rem;
+    }
+
+    .method-steps {
+      display: grid;
+      gap: 16px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .method-step { display: grid; grid-template-columns: 29px 1fr; gap: 10px; }
+
+    .step-number {
+      width: 29px;
+      height: 29px;
+      display: grid;
+      place-items: center;
+      border-radius: 9px;
+      background: var(--navy);
+      color: var(--white);
+      font-size: 0.72rem;
+      font-weight: 850;
+    }
+
+    .method-step h3 {
+      margin: 1px 0 2px;
+      color: var(--navy);
+      font-size: 0.87rem;
+    }
+
+    .method-step p {
+      margin: 0;
+      color: var(--ink-soft);
+      font-size: 0.76rem;
+      line-height: 1.48;
+    }
+
+    .truth-note {
+      margin-top: 21px;
+      padding: 13px;
+      border: 1px solid #f2d18c;
+      border-radius: 13px;
+      background: #fff8e8;
+      color: #765321;
+      font-size: 0.76rem;
+      line-height: 1.5;
+    }
+
+    .truth-note strong { display: block; margin-bottom: 2px; }
+
+    .library {
+      padding: 72px 0 86px;
+      border-top: 1px solid rgba(188, 204, 220, 0.62);
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    .library-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 22px;
+    }
+
+    .library-head p {
+      max-width: 530px;
+      margin: 0;
+      color: var(--ink-soft);
+      font-size: 0.86rem;
+      text-align: right;
+    }
+
+    .doc-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .doc-card {
+      min-height: 178px;
+      display: flex;
+      flex-direction: column;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.84);
+      transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+    }
+
+    .doc-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--line-strong);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .doc-tag {
+      align-self: flex-start;
+      margin-bottom: 10px;
+      padding: 4px 7px;
+      border-radius: 7px;
+      background: #edf3f8;
+      color: var(--ink-soft);
+      font-size: 0.65rem;
+      font-weight: 850;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .doc-card h3 {
+      margin: 0 0 5px;
+      color: var(--navy);
+      font-size: 0.91rem;
+      line-height: 1.35;
+    }
+
+    .doc-card p {
+      margin: 0;
+      color: var(--ink-soft);
+      font-size: 0.76rem;
+    }
+
+    .doc-card a {
+      margin-top: auto;
+      padding-top: 14px;
+      color: var(--teal-dark);
+      font-size: 0.73rem;
+      font-weight: 820;
+      text-decoration: none;
+    }
+
+    .doc-card a:hover { text-decoration: underline; }
+
+    .site-footer {
+      padding: 26px 0 34px;
+      background: var(--navy);
+      color: #d9e8f3;
+    }
+
+    .footer-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      font-size: 0.78rem;
+    }
+
+    .footer-row p { margin: 0; }
+
+    .footer-row a { color: #9ee4d5; text-decoration: none; font-weight: 760; }
+
+    .footer-row a:hover { text-decoration: underline; }
+
+    :focus-visible { outline: 3px solid rgba(15, 139, 141, 0.34); outline-offset: 3px; }
+
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; gap: 30px; padding-top: 62px; }
+      .mode-card { max-width: 620px; }
+      .workspace { grid-template-columns: 1fr; }
+      .method-panel { position: static; }
+      .doc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 640px) {
+      .shell { width: min(100% - 24px, 1180px); }
+      .site-header { position: static; }
+      .nav { min-height: 64px; }
+      .brand-text { display: none; }
+      .nav-link { display: none; }
+      .hero { padding: 49px 0 42px; }
+      h1 { font-size: clamp(2.55rem, 15vw, 4.5rem); }
+      .workspace { padding-bottom: 52px; }
+      .panel-head,
+      .ask-form,
+      .result-region { padding-left: 17px; padding-right: 17px; }
+      .panel-head { align-items: center; }
+      .ask-row { grid-template-columns: 1fr; }
+      .ask-button { min-height: 50px; }
+      .library { padding: 54px 0 64px; }
+      .library-head { align-items: flex-start; flex-direction: column; gap: 7px; }
+      .library-head p { text-align: left; }
+      .doc-grid { grid-template-columns: 1fr; }
+      .footer-row { align-items: flex-start; flex-direction: column; gap: 8px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#demo">Skip to retrieval demo</a>
+
+  <header class="site-header">
+    <div class="shell nav">
+      <a class="brand" href="https://github.com/battina1999/rag-data-docs-assistant" target="_blank" rel="noreferrer">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="m20 20-4-4"></path>
+            <path d="M8 9h6M8 12h4"></path>
+          </svg>
+        </span>
+        <span class="brand-text">Data Docs Assistant</span>
+      </a>
+      <nav class="nav-links" aria-label="Project links">
+        <a class="nav-link" href="https://github.com/battina1999/rag-data-docs-assistant" target="_blank" rel="noreferrer">GitHub repository ↗</a>
+        <a class="status-link" href="https://github.com/battina1999/rag-data-docs-assistant/actions/workflows/ci.yml" target="_blank" rel="noreferrer" title="Open the live CI workflow on GitHub">
+          <span class="status-dot" aria-hidden="true"></span>
+          CI passing ↗
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="shell hero" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">Free static fallback</p>
+        <h1 id="page-title">Search the docs. <span>Trace the evidence.</span></h1>
+        <p class="hero-copy">
+          Explore a curated slice of the airline data platform’s documentation with local lexical retrieval and exact source passages—without a server, account, secret, or paid service.
+        </p>
+        <div class="hero-actions">
+          <a class="button-primary" href="#demo">Try the local demo ↓</a>
+          <a class="button-secondary" href="https://github.com/battina1999/rag-data-docs-assistant#readme" target="_blank" rel="noreferrer">View full project ↗</a>
+        </div>
+      </div>
+
+      <aside class="mode-card" aria-label="Current demo capabilities">
+        <p class="mode-label">Current mode</p>
+        <h2>Browser-only retrieval</h2>
+        <p>The retrieval step of RAG, packaged for reliable $0 hosting.</p>
+        <ul class="mode-list">
+          <li><span class="check" aria-hidden="true">✓</span> Seven curated documentation passages</li>
+          <li><span class="check" aria-hidden="true">✓</span> BM25-style local ranking</li>
+          <li><span class="check" aria-hidden="true">✓</span> Exact extracts with file citations</li>
+          <li><span class="check" aria-hidden="true">✓</span> Zero network calls for questions</li>
+        </ul>
+      </aside>
+    </section>
+
+    <section class="shell workspace" id="demo" aria-label="Documentation retrieval demo">
+      <div class="panel search-panel">
+        <div class="panel-head">
+          <div>
+            <p class="panel-kicker">Retrieval lab</p>
+            <h2>Ask the sample knowledge base</h2>
+          </div>
+          <span class="local-pill">Local only</span>
+        </div>
+
+        <form class="ask-form" id="ask-form">
+          <label class="ask-label" for="question">Question about the airline platform</label>
+          <div class="ask-row">
+            <input class="ask-input" id="question" name="question" type="search" autocomplete="off" placeholder="How is on-time percentage defined?">
+            <button class="ask-button" id="ask-button" type="submit">Search docs</button>
+          </div>
+          <div class="examples" id="examples" aria-label="Example questions"></div>
+        </form>
+
+        <div class="result-region" id="results" aria-live="polite" aria-atomic="true">
+          <div class="empty-state">
+            <div>
+              <div class="empty-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="7"></circle>
+                  <path d="m20 20-4-4"></path>
+                  <path d="M8 9h6M8 12h4"></path>
+                </svg>
+              </div>
+              <h3>Ready to retrieve</h3>
+              <p>Choose a prompt or ask your own question. The answer area will show source-grounded extracts, not generated text.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="panel method-panel">
+        <p class="panel-kicker">Transparent by design</p>
+        <h2>What happens here</h2>
+        <p class="method-intro">Everything below runs inside this browser tab.</p>
+        <ol class="method-steps">
+          <li class="method-step">
+            <span class="step-number">01</span>
+            <div><h3>Tokenize</h3><p>Your question is normalized locally; common filler words are removed.</p></div>
+          </li>
+          <li class="method-step">
+            <span class="step-number">02</span>
+            <div><h3>Rank</h3><p>A compact BM25-style score finds the most relevant embedded passages.</p></div>
+          </li>
+          <li class="method-step">
+            <span class="step-number">03</span>
+            <div><h3>Extract</h3><p>Matching source sentences are shown verbatim with links to their files.</p></div>
+          </li>
+        </ol>
+        <div class="truth-note">
+          <strong>No external model in this mode.</strong>
+          This page demonstrates retrieval and citation behavior. The full Docker deployment adds the FastAPI RAG service and provider adapters.
+        </div>
+      </aside>
+    </section>
+
+    <section class="library" aria-labelledby="library-title">
+      <div class="shell">
+        <div class="library-head">
+          <div>
+            <p class="panel-kicker">Inspectable corpus</p>
+            <h2 id="library-title">What is indexed</h2>
+          </div>
+          <p>Seven concise passages are curated from four repository documents. Each card opens the original source on GitHub.</p>
+        </div>
+        <div class="doc-grid" id="doc-grid"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell footer-row">
+      <p>Built as a no-cost fallback for the RAG Data Docs Assistant.</p>
+      <p><a href="https://github.com/battina1999/rag-data-docs-assistant" target="_blank" rel="noreferrer">Source &amp; full local setup ↗</a></p>
+    </div>
+  </footer>
+
+  <noscript>
+    <div style="padding:16px;background:#fff8e8;color:#765321;text-align:center">JavaScript is required for the local retrieval demo. The source documents remain available through the GitHub links above.</div>
+  </noscript>
+
+  <script>
+    const REPO_ROOT = "https://github.com/battina1999/rag-data-docs-assistant/blob/main/";
+
+    const DOCUMENTS = [
+      {
+        id: "on-time-kpi",
+        category: "KPI definition",
+        title: "On-Time % and completion",
+        path: "knowledge_base/project1_docs/airline_kpi_definitions.md",
+        summary: "DOT A14 threshold, denominator, and cancellation caveat.",
+        text: "On-Time % is the share of completed flights arriving less than 15 minutes late, following the US DOT A14 convention. The formula is on_time_flights divided by completed_flights, where an on-time flight is not cancelled, not diverted, and has arr_delay_min below 15. Cancelled and diverted flights are excluded from the denominator, so On-Time % should always be read next to Completion Factor. Completion Factor is the share of scheduled flights actually flown: total_flights minus cancelled_flights, divided by total_flights. Diverted flights count as completed because they flew."
+      },
+      {
+        id: "delay-analysis",
+        category: "Business rule",
+        title: "Delay rates, causes, and routes",
+        path: "knowledge_base/project1_docs/airline_kpi_definitions.md",
+        summary: "Delay threshold, cause categories, and route suppression.",
+        text: "Delay Rate % is the share of flights arriving at least 15 minutes late. Its denominator is all flights, including cancelled flights, to keep the daily trend stable when cancellations spike. Delay causes are Carrier, Weather, NAS, Security, and Late Aircraft. BTS only attributes cause minutes when arrival delay is at least 15 minutes. Route Reliability computes On-Time % for each directional origin-to-destination pair. Routes with fewer than 20 flights in the selected window are suppressed to reduce small-sample noise."
+      },
+      {
+        id: "platform-layers",
+        category: "Architecture",
+        title: "Pipeline layers and portability",
+        path: "knowledge_base/project1_docs/airline_platform_architecture.md",
+        summary: "Raw, staging, marts, and the DuckDB-to-Snowflake path.",
+        text: "The platform turns flights, airports, carriers, and weather into governed analytics tables. Data moves through raw, staging, dimensions and facts, then analytics marts. Great Expectations validates the raw layer, while dbt owns transformation logic and model tests. The default warehouse is local DuckDB. The same dbt models can run on Snowflake by switching the profile without changing their SQL. A seeded generator and idempotent loads make local runs deterministic and reproducible."
+      },
+      {
+        id: "quality-reconciliation",
+        category: "Data quality",
+        title: "Validation, tests, and reconciliation",
+        path: "knowledge_base/project1_docs/airline_platform_architecture.md",
+        summary: "How the build detects defects and accounts for row loss.",
+        text: "Great Expectations checks the raw tables for nulls, uniqueness, schema, accepted values, and ranges. It runs in monitor mode by default, and a strict flag turns it into a hard gate. dbt tests enforce unique and non-null keys, referential integrity, accepted categories, and business constraints in modelled layers. Reconciliation traces each source from file to raw to staging and classifies every row-count difference as a duplicate removed or a row filtered by a data-quality rule. Unexplained loss fails the build."
+      },
+      {
+        id: "core-schema",
+        category: "Data dictionary",
+        title: "Core star-schema grain",
+        path: "knowledge_base/project1_docs/airline_platform_architecture.md",
+        summary: "Fact and dimension grains for analytics queries.",
+        text: "fact_flights has one row per flight. It contains foreign keys for date, origin airport, destination airport, and airline, plus departure and arrival delay minutes and operational flags. fact_flight_delays has one row per flight and delay cause. The conformed dimensions are dim_date, dim_airport, and dim_airline. Business-facing marts include route_performance, delay_trends, cancellations, and operational_kpis. A uniqueness test on flight_id protects downstream ratios from double-counting."
+      },
+      {
+        id: "bts-profile",
+        category: "Data profile",
+        title: "BTS source volume and null behavior",
+        path: "knowledge_base/project1_docs/airline_data_profile.md",
+        summary: "Observed volume, date range, and expected missing delays.",
+        text: "The profiled US DOT BTS extract contains 3,453,795 rows across six monthly files, from 2024-02-01 through 2025-01-31. It covers 15 distinct carriers and 345 distinct airports. Arrival delay is null for 1.55 percent of rows. Most cancelled flights have no departure delay, which is expected because a flight that never departed has no delay. Staging preserves those values as null, maps their delay bucket to unknown, and marts exclude cancelled flights from delay averages."
+      },
+      {
+        id: "model-card",
+        category: "Model card",
+        title: "Delay classifier use and limits",
+        path: "knowledge_base/project1_docs/airline_model_card.md",
+        summary: "Operational ranking use, test metrics, and safeguards.",
+        text: "The departure-delay classifier ranks upcoming flights by probability of a delay of at least 15 minutes for operations planning. It predicts flights, not people, and is not intended for passenger-facing promises or automated decisions about individuals. Training uses a date split rather than a random split. On the January 2025 test set, LightGBM achieved ROC-AUC 0.6223, Brier score 0.1461, and 1.6 times lift among the riskiest 10 percent. Limitations include no weather features, class imbalance, temporal drift, and cold starts for new routes or carriers."
+      }
+    ];
+
+    const EXAMPLES = [
+      "How is on-time percentage defined?",
+      "What is the grain of fact_flights?",
+      "How does reconciliation handle row loss?",
+      "What are the model's limitations?"
+    ];
+
+    const STOP_WORDS = new Set([
+      "a", "an", "and", "are", "as", "at", "be", "by", "can", "do", "does", "for", "from",
+      "has", "have", "how", "i", "in", "is", "it", "its", "of", "on", "or", "that", "the",
+      "their", "this", "to", "was", "were", "what", "when", "where", "which", "who", "why", "with"
+    ]);
+
+    const questionInput = document.getElementById("question");
+    const askForm = document.getElementById("ask-form");
+    const askButton = document.getElementById("ask-button");
+    const results = document.getElementById("results");
+    const examples = document.getElementById("examples");
+    const docGrid = document.getElementById("doc-grid");
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>'"]/g, character => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "'": "&#39;",
+        '"': "&quot;"
+      }[character]));
+    }
+
+    function tokenize(value) {
+      return String(value)
+        .toLowerCase()
+        .replace(/on[\s-]?time/g, "ontime on time")
+        .replace(/data[\s-]?quality/g, "dataquality data quality")
+        .match(/[a-z0-9]+(?:\.[0-9]+)?/g)?.filter(token => token.length > 1 && !STOP_WORDS.has(token)) || [];
+    }
+
+    const corpusTokens = DOCUMENTS.map(document => tokenize(`${document.title} ${document.category} ${document.summary} ${document.text}`));
+    const averageLength = corpusTokens.reduce((total, tokens) => total + tokens.length, 0) / corpusTokens.length;
+    const documentFrequency = new Map();
+
+    corpusTokens.forEach(tokens => {
+      new Set(tokens).forEach(token => documentFrequency.set(token, (documentFrequency.get(token) || 0) + 1));
+    });
+
+    function inverseDocumentFrequency(token) {
+      const frequency = documentFrequency.get(token) || 0;
+      return Math.log(1 + (DOCUMENTS.length - frequency + 0.5) / (frequency + 0.5));
+    }
+
+    function rankDocuments(query) {
+      const queryTokens = [...new Set(tokenize(query))];
+      const normalizedQuery = query.toLowerCase().trim();
+
+      return DOCUMENTS.map((document, index) => {
+        const tokens = corpusTokens[index];
+        const counts = new Map();
+        tokens.forEach(token => counts.set(token, (counts.get(token) || 0) + 1));
+
+        const k1 = 1.25;
+        const b = 0.72;
+        let score = queryTokens.reduce((total, token) => {
+          const frequency = counts.get(token) || 0;
+          if (!frequency) return total;
+          const denominator = frequency + k1 * (1 - b + b * tokens.length / averageLength);
+          return total + inverseDocumentFrequency(token) * ((frequency * (k1 + 1)) / denominator);
+        }, 0);
+
+        const searchable = `${document.title} ${document.summary} ${document.text}`.toLowerCase();
+        if (normalizedQuery.length > 5 && searchable.includes(normalizedQuery)) score += 3.2;
+        queryTokens.forEach(token => {
+          if (document.title.toLowerCase().includes(token)) score += 0.45;
+          if (document.category.toLowerCase().includes(token)) score += 0.25;
+        });
+
+        return { document, score };
+      }).sort((left, right) => right.score - left.score);
+    }
+
+    function bestSentence(document, queryTokens) {
+      const sentences = document.text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [document.text];
+      return sentences.map((sentence, index) => {
+        const sentenceTokens = new Set(tokenize(sentence));
+        const score = queryTokens.reduce((total, token) => total + (sentenceTokens.has(token) ? inverseDocumentFrequency(token) + 0.35 : 0), 0) - index * 0.006;
+        return { sentence: sentence.trim(), score };
+      }).sort((left, right) => right.score - left.score)[0].sentence;
+    }
+
+    function highlight(value, queryTokens) {
+      const safeValue = escapeHtml(value);
+      const tokens = [...new Set(queryTokens.filter(token => /^[a-z0-9.]+$/.test(token) && token.length > 2))]
+        .sort((left, right) => right.length - left.length);
+      if (!tokens.length) return safeValue;
+      const escapedTokens = tokens.map(token => token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+      return safeValue.replace(new RegExp(`\\b(${escapedTokens.join("|")})\\b`, "gi"), "<mark>$1</mark>");
+    }
+
+    function sourceUrl(path) {
+      return REPO_ROOT + path.split("/").map(encodeURIComponent).join("/");
+    }
+
+    function renderResults(query) {
+      const queryTokens = [...new Set(tokenize(query))];
+      if (!queryTokens.length) {
+        results.innerHTML = `
+          <div class="no-match">
+            <h3>Add a little more detail</h3>
+            <p>Try a topic such as on-time performance, fact table grain, reconciliation, BTS data, or model limitations.</p>
+          </div>`;
+        return;
+      }
+
+      const ranked = rankDocuments(query);
+      const relevant = ranked.filter(item => item.score > 0.35).slice(0, 3);
+
+      if (!relevant.length) {
+        results.innerHTML = `
+          <div class="no-match">
+            <h3>No strong local match</h3>
+            <p>This compact fallback only indexes seven curated passages. Try on-time KPIs, delay causes, pipeline layers, data quality, star-schema grain, BTS volume, or the delay model.</p>
+          </div>`;
+        return;
+      }
+
+      const maxScore = relevant[0].score;
+      const extracts = relevant.slice(0, 2).map(item => bestSentence(item.document, queryTokens));
+      const citations = relevant.map((item, index) => {
+        const relativeMatch = Math.max(1, Math.round((item.score / maxScore) * 100));
+        return `
+          <div class="source-item">
+            <div class="source-meta">
+              <a class="source-title" href="${sourceUrl(item.document.path)}" target="_blank" rel="noreferrer">[${index + 1}] ${escapeHtml(item.document.title)} ↗</a>
+              <span class="match-score">${relativeMatch}% relative match</span>
+            </div>
+            <div class="source-path">${escapeHtml(item.document.path)}</div>
+          </div>`;
+      }).join("");
+
+      results.innerHTML = `
+        <div class="result-topline">
+          <span class="result-badge">Extractive result</span>
+          <span class="result-count">${relevant.length} source${relevant.length === 1 ? "" : "s"} retrieved locally</span>
+        </div>
+        <h3 class="result-question">${escapeHtml(query)}</h3>
+        <p class="evidence-label">Strongest source evidence</p>
+        <p class="extractive-answer">${extracts.map((extract, index) => `<strong>[${index + 1}]</strong> ${highlight(extract, queryTokens)}`).join("<br><br>")}</p>
+        <div class="source-list" aria-label="Retrieved sources">${citations}</div>`;
+    }
+
+    EXAMPLES.forEach(example => {
+      const button = document.createElement("button");
+      button.className = "example-chip";
+      button.type = "button";
+      button.textContent = example;
+      button.addEventListener("click", () => {
+        questionInput.value = example;
+        renderResults(example);
+      });
+      examples.appendChild(button);
+    });
+
+    DOCUMENTS.forEach(sourceDocument => {
+      const card = document.createElement("article");
+      card.className = "doc-card";
+      card.innerHTML = `
+        <span class="doc-tag">${escapeHtml(sourceDocument.category)}</span>
+        <h3>${escapeHtml(sourceDocument.title)}</h3>
+        <p>${escapeHtml(sourceDocument.summary)}</p>
+        <a href="${sourceUrl(sourceDocument.path)}" target="_blank" rel="noreferrer">Open source file ↗</a>`;
+      docGrid.appendChild(card);
+    });
+
+    askForm.addEventListener("submit", event => {
+      event.preventDefault();
+      const query = questionInput.value.trim();
+      if (!query) {
+        questionInput.focus();
+        return;
+      }
+      askButton.disabled = true;
+      askButton.textContent = "Searching…";
+      window.setTimeout(() => {
+        renderResults(query);
+        askButton.disabled = false;
+        askButton.textContent = "Search docs";
+      }, 120);
+    });
+  </script>
+</body>
+</html>
