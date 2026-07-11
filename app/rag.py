@@ -72,10 +72,28 @@ class RAGAssistant:
             ))
         return "\n\n".join(blocks), citations
 
+    @staticmethod
+    def _coverage(question: str, hits) -> float:
+        """Best share of the question's content tokens found in any hit."""
+        from app.providers import _tokens
+
+        q = set(_tokens(question))
+        if not q:
+            return 0.0
+        return max((len(q & set(_tokens(h.text))) / len(q) for h in hits), default=0.0)
+
     def answer(self, question: str) -> Answer:
         provider = active_providers()["llm"]
         hits = self.retriever.search(question)
         kept = [h for h in hits if h.score >= settings.relevance_threshold]
+
+        # Two-signal anti-hallucination gate:
+        #  1) semantic: best vector relevance >= threshold
+        #  2) lexical : enough of the question's content words actually appear
+        #     in the retrieved context (kills vocabulary-adjacent traps like
+        #     "airline baggage fees" that embeddings alone score too high)
+        if kept and self._coverage(question, kept) < settings.coverage_threshold:
+            kept = []
 
         if not kept:
             return Answer(question=question, answer=FALLBACK, grounded=False,

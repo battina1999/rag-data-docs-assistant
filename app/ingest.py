@@ -59,6 +59,26 @@ def chunk_documents(docs: list[Document]) -> list[Document]:
     return chunks
 
 
+def build_bm25(chunks) -> None:
+    """Build + persist a BM25 lexical index over the same chunks (hybrid
+    retrieval pairs it with the FAISS vector index)."""
+    import pickle
+
+    from rank_bm25 import BM25Okapi
+
+    from app.providers import _tokens  # same stopword-filtered tokenizer
+
+    corpus_tokens = [_tokens(c.page_content) for c in chunks]
+    payload = {
+        "bm25": BM25Okapi(corpus_tokens),
+        "texts": [c.page_content for c in chunks],
+        "metadatas": [c.metadata for c in chunks],
+    }
+    with open(settings.index_dir / "bm25.pkl", "wb") as fh:
+        pickle.dump(payload, fh)
+    print(f"[ingest] BM25 index saved -> {settings.index_dir / 'bm25.pkl'}")
+
+
 def build_index() -> dict:
     settings.ensure_dirs()
     providers = active_providers()
@@ -79,6 +99,8 @@ def build_index() -> dict:
     settings.faiss_dir.mkdir(parents=True, exist_ok=True)
     vs.save_local(str(settings.faiss_dir))
     print(f"[ingest] FAISS index saved -> {settings.faiss_dir}")
+
+    build_bm25(chunks)
 
     cat = catalog.build_catalog()
     print(f"[ingest] catalog built -> tables={cat['tables']} columns={cat['columns']}")
